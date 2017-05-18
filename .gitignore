@@ -8,3 +8,4 @@ Scratch/*.swp
 .ant-targets-build.xml
 tmp/
 .gitignore
+Scratch/
