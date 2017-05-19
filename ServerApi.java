@@ -1,10 +1,11 @@
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketAddress;
 import java.util.HashMap;
-
-import Info;
+import java.util.Map;
 
 public class ServerApi {
 	private static int PORT = 9898;
@@ -35,16 +36,27 @@ public class ServerApi {
 	}
 
 	public void sendMsg(Info info) {
-		sendMsg(info.getIP(), info.gtMsg());
+		sendMsg(info.getIP(), info.getMsg());
 	}
 
 	public void sendAll(String msg) {
 		//Send msg to all clients.
 	}
 
-	private void handout(String ip, String msg) {
-		gb.play(ip, msg);
-		sgm.play(ip, msg);
+	private class HandOut implements Runnable {
+		private String ip;
+		private String msg;
+		
+		public HandOut(String i, String m) {
+			ip = i;
+			msg = m;
+		}
+
+		@Override
+		public void run() {
+			gb.play(ip, msg);
+			sgm.play(ip, msg);
+		}
 	}
 
 	private class IORunnable implements Runnable {
@@ -54,51 +66,39 @@ public class ServerApi {
 			System.out.println("ServerApi is waiting client connection(s)...");
 			while(running) {
 				for(String ip: map.keySet()) {
-					if(!get(ip)) {
-						try {
-							ObjectInputStream input = 
-								new ObjectInputStream(get(ip).getInputStream());
-							if(input.available() > 0) {
-								String message = inputStream.readUTF();
-								handout(ip, message);
-							}
-						}catch(IOException ex) {
-							System.out.println("Error: Unable to read from "+ip);
+					try {
+						ObjectInputStream input = 
+							new ObjectInputStream(map.get(ip).getInputStream());
+						if(input.available() > 0) {
+							String message = input.readUTF();
+							(new HandOut(ip, message)).start();
 						}
+					}catch(IOException ex) {
+						System.out.println("Error: Unable to read from "+ip);
 					}
 				}
 			}
 		}
 	}
 
-	private class AcceptRunnable implements Runnable {
-		@Override
-		public void run() {
-			try {
-				server = new ServerSocket(PORT);
-				boolean running = true;
-				while(running) {
-					Socket socket = server.accept();
-					map.put(socket.getRemoteSocketAddress().toString(), 
-							socket);
-					System.out.println("Client "+socket.getRemoteSocketAddress().toString()
-							+" connected to "+socket.getLocalSocketAddress());
-				} catch(IOException ex) {
-					ex.printStackTrace();
-				}
-			}
+}
+
+class ServerGameManager {
+	void play(String ip, String msg) {
+		try {
+			System.out.println("ServerGameManager is playing...");
+		}catch(Exception e) {
+			e.printStackTrace();
 		}
 	}
 }
 
-class ServerGameManager {
-	void play() {
-		System.out.println("ServerGameManager is playing...");
-	}
-}
-
 class GameBuilder {
-	void play() {
-		System.out.println("GameBuilder is playing...");
+	void play(String ip, String msg) {
+		try {
+			System.out.println("GameBuilder is playing...");
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
 	}
 }
