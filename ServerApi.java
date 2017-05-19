@@ -33,6 +33,14 @@ public class ServerApi {
 
 	public void sendMsg(String ip, String msg) {
 		// Send msg to client of ip.
+		try{
+			ObjectOutputStream output=
+					new ObjectOutputStream(map.get(ip).getOutputStream());
+			output.writeUTF(msg);
+			output.flush();
+		}catch(IOException ex){
+			System.out.println("Error : Unable to write to "+ip);
+		}
 	}
 
 	public void sendMsg(Info info) {
@@ -41,6 +49,8 @@ public class ServerApi {
 
 	public void sendAll(String msg) {
 		//Send msg to all clients.
+		for(String ip : map.keySet())
+			sendMsg(ip,msg);
 	}
 
 	private class HandOut implements Runnable {
